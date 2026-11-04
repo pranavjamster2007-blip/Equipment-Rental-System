@@ -1,0 +1,6 @@
+{
+  "name": "Equipment Rental System",
+  "description": "Full stack equipment rental management system featuring JWT auth, role-based access for Admin, Staff, and Customer, equipment inventory, bookings, rentals, inspections, payments, reports, and API documentation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
