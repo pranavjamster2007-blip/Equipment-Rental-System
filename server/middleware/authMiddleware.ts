@@ -24,7 +24,10 @@ export const authenticateJWT = async (req: AuthRequest, res: Response, next: Nex
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string; email: string };
 
-    const user = await UserModel.findById(decoded.id);
+    let user = await UserModel.findById(decoded.id);
+    if (!user && decoded.email) {
+      user = await UserModel.findOne({ email: decoded.email.toLowerCase() });
+    }
     if (!user) {
       res.status(401).json({ success: false, message: 'User associated with token no longer exists.' });
       return;

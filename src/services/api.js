@@ -21,7 +21,16 @@ export async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      // If server returned HTML (e.g. 502/404 page), extract clean message
+      throw new Error(`Server returned status ${response.status}. Please ensure backend is running.`);
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
@@ -29,7 +38,9 @@ export async function request(endpoint, options = {}) {
 
     return data;
   } catch (error) {
-    console.error(`API Error on ${endpoint}:`, error.message);
+    if (endpoint !== '/auth/me') {
+      console.error(`API Error on ${endpoint}:`, error.message);
+    }
     throw error;
   }
 }

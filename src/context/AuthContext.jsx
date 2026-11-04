@@ -25,8 +25,8 @@ export function AuthProvider({ children }) {
           } else {
             logout();
           }
-        } catch (err) {
-          console.error('Failed to restore session:', err.message);
+        } catch {
+          // Token is expired, invalid, or obsolete: silently clear and prompt login
           logout();
         }
       }

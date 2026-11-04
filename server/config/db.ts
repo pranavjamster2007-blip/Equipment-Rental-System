@@ -52,7 +52,7 @@ class MongoCollection<T extends IDocument> {
   async create(data: Partial<T>): Promise<T> {
     const now = new Date().toISOString();
     const doc = {
-      _id: generateId(),
+      _id: (data as any)._id || generateId(),
       createdAt: now,
       updatedAt: now,
       ...data,
@@ -114,8 +114,9 @@ async function seedDatabase() {
   const hashedPasswordStaff = await bcrypt.hash('staff123', 10);
   const hashedPasswordCust = await bcrypt.hash('cust123', 10);
 
-  // 1. Users
+  // 1. Users with stable IDs
   const admin = await collections.users.create({
+    _id: '65f000000000000000000001',
     name: 'Prof. Rajesh Sharma (Admin)',
     email: 'admin@rental.edu',
     password: hashedPasswordAdmin,
@@ -125,6 +126,7 @@ async function seedDatabase() {
   });
 
   const staff = await collections.users.create({
+    _id: '65f000000000000000000002',
     name: 'Kavita Verma (Store Manager)',
     email: 'staff@rental.edu',
     password: hashedPasswordStaff,
@@ -134,6 +136,7 @@ async function seedDatabase() {
   });
 
   const customer1 = await collections.users.create({
+    _id: '65f000000000000000000003',
     name: 'Aman Gupta (Student Customer)',
     email: 'customer@rental.edu',
     password: hashedPasswordCust,
@@ -143,6 +146,7 @@ async function seedDatabase() {
   });
 
   const customer2 = await collections.users.create({
+    _id: '65f000000000000000000004',
     name: 'Sneha Patel (Media Club)',
     email: 'sneha@rental.edu',
     password: hashedPasswordCust,

@@ -27,7 +27,8 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3000;
+  // AI Studio requires dev server to run strictly on port 3000
+  const PORT = 3000;
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Initialize DB Connection and Seed Data
@@ -57,6 +58,14 @@ async function startServer() {
   app.use('/api/inspections', inspectionRoutes);
   app.use('/api/payments', paymentRoutes);
   app.use('/api/reports', reportRoutes);
+
+  // Fallback 404 handler for any non-existent API routes so they return JSON, not HTML
+  app.all('/api/*', (_req: Request, res: Response) => {
+    res.status(404).json({
+      success: false,
+      message: 'API route not found',
+    });
+  });
 
   // Global API Error handler
   app.use('/api', (err: any, _req: Request, res: Response, _next: NextFunction) => {
