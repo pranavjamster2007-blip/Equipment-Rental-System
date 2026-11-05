@@ -93,7 +93,7 @@ export default function EquipmentPage() {
   const fetchEquipment = async () => {
     setLoading(true);
     try {
-      let query = `?page=${currentPage}&limit=8`;
+      let query = `?page=${currentPage}&limit=12`;
       if (selectedCategory !== 'All') query += `&category=${encodeURIComponent(selectedCategory)}`;
       if (selectedStatus !== 'All') query += `&status=${encodeURIComponent(selectedStatus)}`;
       if (searchTerm) query += `&search=${encodeURIComponent(searchTerm)}`;

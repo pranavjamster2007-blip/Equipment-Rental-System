@@ -12,7 +12,7 @@ import { UserModel } from '../models/User.ts';
 import { InspectionModel } from '../models/Inspection.ts';
 import { AuthRequest } from '../middleware/authMiddleware.ts';
 
-export const getDashboardSummary = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getDashboardSummary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const allEquipment = await EquipmentModel.find();
     const allBookings = await BookingModel.find();
@@ -58,14 +58,34 @@ export const getDashboardSummary = async (_req: AuthRequest, res: Response): Pro
       count: categoryMap[name],
     }));
 
+    const user = req.user;
+    const isCustomer = user?.role === 'Customer';
+
+    // Bookings & Rentals filtering by role
+    const customerBookings = isCustomer
+      ? allBookings.filter((b: any) => b.customerId === user._id || b.customerEmail === user.email)
+      : allBookings;
+
+    const customerRentals = isCustomer
+      ? allRentals.filter((r: any) => r.customerId === user._id)
+      : allRentals;
+
     // Recent activity (latest 5 bookings & rentals)
-    const recentBookings = allBookings
+    const recentBookings = customerBookings
       .slice(-5)
       .reverse();
 
-    const recentRentals = allRentals
+    const recentRentals = customerRentals
       .slice(-5)
       .reverse();
+
+    const activeRentalsCount = isCustomer
+      ? customerRentals.filter((r: any) => r.status === 'Active').length
+      : allRentals.filter((r: any) => r.status === 'Active').length;
+
+    const pendingBookingsCount = isCustomer
+      ? customerBookings.filter((b: any) => b.status === 'Pending').length
+      : allBookings.filter((b: any) => b.status === 'Pending').length;
 
     res.status(200).json({
       success: true,
@@ -76,8 +96,8 @@ export const getDashboardSummary = async (_req: AuthRequest, res: Response): Pro
         bookedCount,
         maintenanceCount,
         totalCustomers: allUsers.filter((u: any) => u.role === 'Customer').length,
-        activeRentals: allRentals.filter((r: any) => r.status === 'Active').length,
-        pendingBookings: allBookings.filter((b: any) => b.status === 'Pending').length,
+        activeRentals: activeRentalsCount,
+        pendingBookings: pendingBookingsCount,
         totalInspections: allInspections.length,
         financials: {
           rentalRevenue,

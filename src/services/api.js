@@ -23,17 +23,23 @@ export async function request(endpoint, options = {}) {
     const response = await fetch(`${BASE_URL}${endpoint}`, config);
     const contentType = response.headers.get('content-type') || '';
     
-    let data;
+    let data = null;
     if (contentType.includes('application/json')) {
       data = await response.json();
     } else {
       const text = await response.text();
-      // If server returned HTML (e.g. 502/404 page), extract clean message
-      throw new Error(`Server returned status ${response.status}. Please ensure backend is running.`);
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text || `HTTP error ${response.status}` };
+      }
     }
 
     if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      if (response.status === 401) {
+        localStorage.removeItem('rental_token');
+      }
+      throw new Error(data?.message || `HTTP error! status: ${response.status}`);
     }
 
     return data;

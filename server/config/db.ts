@@ -155,115 +155,86 @@ async function seedDatabase() {
     address: 'Girls Hostel 1, Room 214, Campus',
   });
 
-  // 2. Categories
+  // 2. Categories with stable IDs
+  const catMap: Record<string, any> = {};
+
   const catAudioVisual = await collections.categories.create({
+    _id: '65f000000000000000000011',
     name: 'Audio/Visual & Cameras',
     description: 'DSLRs, Cinema Cameras, Microphones, Lights and Lenses for photography and media productions.',
     icon: 'Camera',
   });
+  catMap['Audio/Visual & Cameras'] = catAudioVisual;
 
   const catPowerTools = await collections.categories.create({
+    _id: '65f000000000000000000012',
     name: 'Construction & Power Tools',
     description: 'Heavy duty drills, saws, angle grinders, and safety equipment for engineering workshops.',
     icon: 'Wrench',
   });
+  catMap['Construction & Power Tools'] = catPowerTools;
 
   const catLabTesting = await collections.categories.create({
+    _id: '65f000000000000000000013',
     name: 'Laboratory & Electronics',
     description: 'Digital storage oscilloscopes, multimeters, soldering stations, and signal generators.',
     icon: 'Cpu',
   });
+  catMap['Laboratory & Electronics'] = catLabTesting;
 
   const catSoundStaging = await collections.categories.create({
+    _id: '65f000000000000000000014',
     name: 'Event & Sound Staging',
     description: 'PA systems, stage monitors, wireless collar mics, and portable generators for college fest events.',
     icon: 'Music',
   });
+  catMap['Event & Sound Staging'] = catSoundStaging;
 
-  // 3. Equipment
-  const eq1 = await collections.equipment.create({
-    name: 'Sony FX3 Cinema Camera 4K',
-    categoryId: catAudioVisual._id,
-    categoryName: catAudioVisual.name,
-    modelNumber: 'ILME-FX3-V2',
-    serialNumber: 'SN-FX3-88219',
-    dailyRate: 1500,
-    securityDeposit: 5000,
-    status: 'Rented',
-    condition: 'Excellent',
-    description: 'Full-frame cinema line camera with 4K 120p recording, XLR audio handle unit and dual card slots.',
-    imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80',
+  const catSurveying = await collections.categories.create({
+    _id: '65f000000000000000000015',
+    name: 'Surveying & Drones',
+    description: 'Thermal imaging mapping drones, optical levels, RTK GNSS receivers, and laser distance instruments.',
+    icon: 'Navigation',
   });
+  catMap['Surveying & Drones'] = catSurveying;
 
-  const eq2 = await collections.equipment.create({
-    name: 'DeWalt 20V Max Hammer Drill Kit',
-    categoryId: catPowerTools._id,
-    categoryName: catPowerTools.name,
-    modelNumber: 'DCD996B',
-    serialNumber: 'SN-DW-44120',
-    dailyRate: 450,
-    securityDeposit: 1500,
-    status: 'Available',
-    condition: 'Good',
-    description: '3-speed high performance brushless motor hammer drill with auxiliary handle and chuck key.',
-    imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80',
+  const catComputing = await collections.categories.create({
+    _id: '65f000000000000000000016',
+    name: 'IT & Computing Hardware',
+    description: 'Workstations, VR headsets, managed PoE switches, 5G hotspots, and network test equipment.',
+    icon: 'Server',
   });
+  catMap['IT & Computing Hardware'] = catComputing;
 
-  const eq3 = await collections.equipment.create({
-    name: 'Rigol DS1054Z Digital Storage Oscilloscope',
-    categoryId: catLabTesting._id,
-    categoryName: catLabTesting.name,
-    modelNumber: 'DS1054Z-50M',
-    serialNumber: 'SN-RG-77215',
-    dailyRate: 800,
-    securityDeposit: 3000,
-    status: 'Booked',
-    condition: 'Excellent',
-    description: '4-channel 50MHz digital oscilloscope with 1GSa/s sampling rate, 24Mpts memory depth and color display.',
-    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
-  });
+  // 3. Seed 100 Equipment Items
+  const { initial100Equipment } = await import('./equipmentSeedList.ts');
+  const seededEquipment: any[] = [];
 
-  const eq4 = await collections.equipment.create({
-    name: 'Yamaha DXR12 1100W Powered PA Speaker',
-    categoryId: catSoundStaging._id,
-    categoryName: catSoundStaging.name,
-    modelNumber: 'DXR12-MK2',
-    serialNumber: 'SN-YM-90184',
-    dailyRate: 1200,
-    securityDeposit: 4000,
-    status: 'Available',
-    condition: 'Good',
-    description: 'High power 2-way active loudspeaker with FIR-X tuning, 134dB SPL max, and rugged ABS enclosure.',
-    imageUrl: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=600&q=80',
-  });
+  for (let i = 0; i < initial100Equipment.length; i++) {
+    const item = initial100Equipment[i];
+    const categoryDoc = catMap[item.category] || catAudioVisual;
+    const hexIndex = (i + 1).toString(16).padStart(6, '0');
+    const stableId = `65f000000000000000${hexIndex}`;
 
-  const eq5 = await collections.equipment.create({
-    name: 'DJI RS 3 Pro Gimbal Stabilizer',
-    categoryId: catAudioVisual._id,
-    categoryName: catAudioVisual.name,
-    modelNumber: 'DJI-RS3-PRO',
-    serialNumber: 'SN-DJI-33019',
-    dailyRate: 950,
-    securityDeposit: 3500,
-    status: 'Available',
-    condition: 'Excellent',
-    description: 'Carbon fiber 3-axis camera stabilizer with automated axis locks and 4.5kg tested payload capacity.',
-    imageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80',
-  });
+    const eqDoc = await collections.equipment.create({
+      _id: stableId,
+      name: item.name,
+      categoryId: categoryDoc._id,
+      categoryName: categoryDoc.name,
+      modelNumber: item.modelNumber,
+      serialNumber: item.serialNumber,
+      dailyRate: item.dailyRate,
+      securityDeposit: item.securityDeposit,
+      status: item.status,
+      condition: item.condition,
+      description: item.description,
+      imageUrl: item.imageUrl,
+    });
+    seededEquipment.push(eqDoc);
+  }
 
-  const eq6 = await collections.equipment.create({
-    name: 'Honda EU3000is Quiet Inverter Generator',
-    categoryId: catSoundStaging._id,
-    categoryName: catSoundStaging.name,
-    modelNumber: 'EU3000is',
-    serialNumber: 'SN-HN-11928',
-    dailyRate: 2200,
-    securityDeposit: 6000,
-    status: 'Maintenance',
-    condition: 'Fair',
-    description: '3000 watts 120V portable inverter generator for outdoor exhibitions and clean power backup.',
-    imageUrl: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=600&q=80',
-  });
+  const eq1 = seededEquipment[0];
+  const eq3 = seededEquipment[2];
 
   // 4. Bookings
   const today = new Date();
@@ -368,5 +339,5 @@ async function seedDatabase() {
     remarks: '4-day rental fee advance payment for Sony FX3 Camera Kit.',
   });
 
-  console.log(' [MongoDB Seed] Database successfully seeded with 4 users, 4 categories, 6 equipment items, 2 bookings, 1 rental, 1 inspection, 2 payments.');
+  console.log(` [MongoDB Seed] Database successfully seeded with 4 users, 6 categories, ${seededEquipment.length} equipment items, 2 bookings, 1 rental, 1 inspection, 2 payments.`);
 }

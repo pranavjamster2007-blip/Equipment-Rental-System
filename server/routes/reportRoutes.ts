@@ -11,6 +11,6 @@ import { authorizeRoles } from '../middleware/roleMiddleware.ts';
 const router = Router();
 
 router.use(authenticateJWT);
-router.get('/dashboard', authorizeRoles('Admin', 'Staff'), getDashboardSummary);
+router.get('/dashboard', getDashboardSummary);
 
 export default router;
