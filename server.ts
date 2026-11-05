@@ -1,82 +1,28 @@
 /**
- * Equipment Rental System - Main Full Stack Server Entry
- * ExpressJS Backend with Vite middleware mounting for unified dev server on port 3000
+ * Equipment Rental System - Main Server Entry Point
+ * Full-stack Express + Vite dev server for local laptops and production servers
  */
 
-import express, { Request, Response, NextFunction } from 'express';
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import express, { Request, Response } from 'express';
 import { createServer as createViteServer } from 'vite';
-
-import { connectDB } from './server/config/db.ts';
-import authRoutes from './server/routes/authRoutes.ts';
-import userRoutes from './server/routes/userRoutes.ts';
-import categoryRoutes from './server/routes/categoryRoutes.ts';
-import equipmentRoutes from './server/routes/equipmentRoutes.ts';
-import bookingRoutes from './server/routes/bookingRoutes.ts';
-import rentalRoutes from './server/routes/rentalRoutes.ts';
-import inspectionRoutes from './server/routes/inspectionRoutes.ts';
-import paymentRoutes from './server/routes/paymentRoutes.ts';
-import reportRoutes from './server/routes/reportRoutes.ts';
-
-dotenv.config();
+import app, { ensureDb } from './server/app.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function startServer() {
-  const app = express();
-  // AI Studio requires dev server to run strictly on port 3000
-  const PORT = 3000;
   const isProduction = process.env.NODE_ENV === 'production';
 
-  // Initialize DB Connection and Seed Data
-  await connectDB();
+  // In AI Studio dev container, PORT is set to 8080 by Cloud Run while nginx proxy routes to 3000.
+  // On any user laptop, local machine, or cloud platform (Render, etc.), it uses process.env.PORT or 3000.
+  const PORT = process.env.PORT && process.env.PORT !== '8080' ? Number(process.env.PORT) : 3000;
 
-  // Express middleware
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Pre-initialize database and seeds
+  await ensureDb();
 
-  // API Health Check
-  app.get('/api/health', (_req: Request, res: Response) => {
-    res.json({
-      status: 'OK',
-      project: '20. Equipment Rental System',
-      stage: '2nd Year College Internal Mark Project',
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  // Mount API Routers
-  app.use('/api/auth', authRoutes);
-  app.use('/api/users', userRoutes);
-  app.use('/api/categories', categoryRoutes);
-  app.use('/api/equipment', equipmentRoutes);
-  app.use('/api/bookings', bookingRoutes);
-  app.use('/api/rentals', rentalRoutes);
-  app.use('/api/inspections', inspectionRoutes);
-  app.use('/api/payments', paymentRoutes);
-  app.use('/api/reports', reportRoutes);
-
-  // Fallback 404 handler for any non-existent API routes so they return JSON, not HTML
-  app.all('/api/*', (_req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      message: 'API route not found',
-    });
-  });
-
-  // Global API Error handler
-  app.use('/api', (err: any, _req: Request, res: Response, _next: NextFunction) => {
-    console.error('API Error:', err);
-    res.status(err.status || 500).json({
-      success: false,
-      message: err.message || 'Internal Server Error',
-    });
-  });
-
-  // Mount Vite or static build
+  // Mount Vite middleware in development, or serve static dist in production
   if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -91,10 +37,11 @@ async function startServer() {
     });
   }
 
-  app.listen(Number(PORT), '0.0.0.0', () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`====================================================`);
     console.log(` Equipment Rental System Server running on http://0.0.0.0:${PORT}`);
     console.log(` Backend APIs available at http://0.0.0.0:${PORT}/api/*`);
+    console.log(` Mode: ${isProduction ? 'Production (Static Dist)' : 'Development (Vite HMR/Middleware)'}`);
     console.log(`====================================================`);
   });
 }
